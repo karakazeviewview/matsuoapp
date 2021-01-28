@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title></title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <pre>
+          <code>
+          <h1>dummy source code</h1>
+package model;
+
+import java.io.Serializable;
+
+public class Star implements Serializable{
+	private String enName;
+	private String jpName;
+	private String origin;
+	private String starImage;
+	
+	public Star(){}
+
+	public String getEnName() {
+		return enName;
+	}
+
+	public void setEnName(String enName) {
+		this.enName = enName;
+	}
+
+	public String getJpName() {
+		return jpName;
+	}
+
+	public void setJpName(String jpName) {
+		this.jpName = jpName;
+	}
+
+	public String getOrigin() {
+		return origin;
+	}
+
+	public void setOrigin(String origin) {
+		this.origin = origin;
+	}
+
+	public String getStarImage() {
+		return starImage;
+	}
+
+	public void setStarImage(String starImage) {
+		this.starImage = starImage;
+	}
+	
+}
+
+
+
+
+package model;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonReader;
+
+public class StarParser {
+	public List<Star> getList(String urlString){
+		//作成したいlistをnew
+		List<Star> list=new ArrayList<>();
+		//スコープをあげるためここで宣言
+		JsonReader reader=null;
+		HttpURLConnection con=null;
+		try {
+			//urlの文字列からURLインスタンスを作成
+			URL url=new URL(urlString);
+			//openConnectionで接続
+			con=(HttpURLConnection) url.openConnection();
+			//GETによるリクエスト
+			con.setRequestMethod("GET");
+			//データ取得
+			InputStream is=con.getInputStream();
+			//スプーンからコップで効率化
+			InputStreamReader isr=new InputStreamReader(is,"UTF-8");
+			//インプットストリームリーダーインスタンスからJsonReadrインスタンスを作成できる。
+			reader=new JsonReader(isr);
+			//GsonをnewしてfromJsonメソッドを用いてルート要素を取得する(今回ルートはオブジェクト)
+			JsonObject root=new Gson().fromJson(reader, JsonObject.class);
+			//root要素にあるresultプロパティを取得(配列)
+			JsonArray result=root.get("result").getAsJsonArray();
+			//配列とforは刺身と醤油。JsonArrayはsize()で要素数取得
+			for(int i=0;i<result.size();i++){
+				//Starインスタンスをnew
+				Star star=new Star();
+				//JsonArrayからはget(index)で要素を取得できる(オブジェクト)
+				JsonObject sObj=result.get(i).getAsJsonObject();
+				//取り出したオブジェクトの情報をStarインスタンスに詰める
+				star.setEnName(sObj.get("enName").getAsString());
+				star.setJpName(sObj.get("jpName").getAsString());
+				star.setOrigin(sObj.get("origin").getAsString());
+				star.setStarImage(sObj.get("starImage").getAsString());
+				//Starインスタンスに全ての情報が入ったのでリストにadd
+				list.add(star);
+			}
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}finally{
+			if(reader != null){
+				try {
+					reader.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			if(con !=null){
+				con.disconnect();
+			}
+		}
+		return list;
+	}
+}
+
+
+
+
+
+
+
+package controller;
+
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import model.Star;
+import model.StarParser;
+
+@WebServlet("/Main")
+public class Main extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+	//東京の緯度(LAT)経度(LNG)
+	private static final String LAT="35.709026";
+	private static final String LNG="139.731992";
+       
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		//現在時刻をもとにクエリパラメーターを作成
+		Date date=new Date();//実行日時の情報を持つDateインスタンス作成
+		SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd");//クエリパラメータに合わせたフォーマット作成
+		String today=sdf.format(date);//フォーマットされた文字列を得る。
+		sdf=new SimpleDateFormat("H");//時刻(0~23)
+		String hour=sdf.format(date);
+		sdf=new SimpleDateFormat("m");//分(0~59)
+		String min=sdf.format(date);
+	
+		
+		//クエリパラメータをもとにリクエストurlを作成する
+		String url = String.format("https://livlog.xyz/hoshimiru/constellation?lat=%s&lng=%s&date=%s&hour=%s&min=%s",
+				LAT, LNG, today, hour, min);
+		
+		//パーサーにurlを渡しリストを得る
+		StarParser parser=new StarParser();
+		List<Star> list=parser.getList(url);
+		
+		//viewで使う情報をリクエストスコープに詰める
+		request.setAttribute("list",list);
+		request.setAttribute("today",today);
+		request.setAttribute("hour",hour);
+		request.setAttribute("min",min);
+		request.setAttribute("lat",LAT);
+		request.setAttribute("lng",LNG);
+		
+		//フォーワード
+		RequestDispatcher rd=request.getRequestDispatcher("/WEB-INF/view/main.jsp");
+		rd.forward(request, response);
+		
+	}
+}
+
+
+
+
+
+<xmp>
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8" import="java.util.*,model.*"%>
+<%
+List<Star> list=(List<Star>)request.getAttribute("list");
+String today=(String)request.getAttribute("today");
+String hour=(String)request.getAttribute("hour");
+String min=(String)request.getAttribute("min");
+String lat=(String)request.getAttribute("lat");
+String lng=(String)request.getAttribute("lng");
+%>
+    
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<title>StarApp</title>
+<style>
+#container{
+	width:80%;
+	margin:0 auto;
+}
+.starBox{
+	padding-bottom:20px;
+	border-bottom:1px solid #aaa;
+}
+.imageBox img{
+	display:block;
+	width:100%;
+}
+
+
+</style>
+</head>
+<body>
+<div id="container">
+<h1>東京で見られる現在の星座</h1>
+<table border="1">
+<tr><th>日付</th><td><%=today %></td></tr>
+<tr><th>時刻</th><td><%=hour %>時<%=min %>分</td></tr>
+<tr><th>緯度</th><td><%=lat %></td></tr>
+<tr><th>経度</th><td><%=lng %></td></tr>
+</table>
+<%if(list != null && list.size()>0){ %>
+
+<%for(Star s:list){ %>
+
+<div class="starBox">
+<h2><%=s.getJpName() %>(<%=s.getEnName() %>)</h2>
+<div class="imageBox">
+<img src="<%=s.getStarImage() %>">
+</div>
+<h3>[由来]</h3>
+<p><%=s.getOrigin() %></p>
+</div>
+<%} %>
+<%} %>
+</div>
+</body>
+</html>
+
+
+
+</xmp>
+      
+    </code>
+    </pre>
+
+  解説:<br>
+  今回のポイント
+<img src="startree.png">
+  
+  <!--
+<p><a href="scindex.html">喫茶店で日曜コード目次に戻る</a></p>
+  <p><a href="index.html">ココンカ塾サイトマップに戻る</a></p>
+-->
+
+  <li><a href="../../index2.php">質問&自作問題投稿</a></li>　　
+</body>
+
+</html>

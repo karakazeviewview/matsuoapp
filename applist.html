@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>SundayCode</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <h1>ゲーム&ソースコード集</h1>
+  <li><a href="http://35.190.230.167/PoeticRelay/">詩のリレーのためのアプリ(Java)</a>
+    <a href="javadiy/stardiy.html">/ソースコード </a>:投稿者Turuさん</li>
+<li><a href="http://35.190.230.167/donutshop/Admin">売買サイトモック(Java)</a>
+    <a href="javadiy/stardiy.html">/ソースコード </a>:投稿者Ayaさん</li>
+<li><a href="http://35.190.230.167/starapp/Main">東京プラネタリウム(Java)</a>
+  <a href="javadiy/stardiy.html">/ソースコード </a>:投稿者Ayaさん</li>
+
+<li><a href="indexgu.html">数あてゲーム(JavaScript)</a>
+    <a href="javadiy/stardiy.html">/ソースコード </a>:投稿者Turuさん</li>
+
+<li><a href="indexgu.html">掛け算クイズ(JavaScript)</a>
+    <a href="javadiy/stardiy.html">/ソースコード </a>:投稿者Risuさん</li>
+<li><a href="indexgu.html">大人か子供か(JavaScript)</a>
+    <a href="javadiy/stardiy.html">/ソースコード </a>:投稿者Turuさん</li>
+<li><a href="indexgu.html">正の数(JavaScript)</a>
+  <a href="javadiy/stardiy.html">/ソースコード </a>:投稿者Ayaさん</li>
+<li><a href="indexgu.html">神経衰弱(JavaScript)</a>
+　  <a href="javadiy/stardiy.html">/ソースコード </a>:投稿者Turuさん</li>
+
+          <button type=“button” onclick="location.href='index2.php'">ソースコード を投稿</button>
+  <div id="app"><br><br>
+    <p>平均イイネ数: {{ total /3}}</p>
+    <!-- <like-component message="Like" v-on:increment="incrementTotal"></like-component> -->
+    <like-component message="Turuさんイイネ!" @increment="incrementTotal"></like-component>
+    <like-component message="Risuさんイイネ!" @increment="incrementTotal"></like-component>
+    <like-component message="Ayaさんイイネ!" @increment="incrementTotal"></like-component>
+ 
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="js/main2.js"></script>
+</body>
+</html>
