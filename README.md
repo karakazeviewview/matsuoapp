@@ -6,6 +6,6 @@
 
 投稿機能は、オンラインで動作確認済み。
 
-http://cocomca.com/
+http://gakegeek.com/
 
 
